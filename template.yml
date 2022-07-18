@@ -1,5 +1,5 @@
 #Exercise-Rollback
-AWSTemplateFormationVersion: 2010-09-09
+AWSTemplateFormatVersion: 2010-09-09
 Description:  Udacity Devops Lesson 4
 Resources:
   EC2Instance:
