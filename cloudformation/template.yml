@@ -1,4 +1,4 @@
-#Exercise - Rollback
+#Exercise-Rollback
 AWSTemplateFormationVersion: 2022-18-7
 Description:  Udacity Devops Lesson 4
 Resources:
