@@ -1,9 +1,9 @@
 #Exercise-Rollback
-AWSTemplateFormationVersion: 2022-18-7
+AWSTemplateFormationVersion: 2010-09-09
 Description:  Udacity Devops Lesson 4
 Resources:
   EC2Instance:
-    Type: 'AWS::EC@::Instance'
+    Type: 'AWS::EC2::Instance'
     Properties:
       SecurityGroups:
         - !Ref InstanceSecurityGroup
