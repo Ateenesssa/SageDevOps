@@ -16,36 +16,36 @@ commands:
           command:  |
             aws cloudformation delete-stack --stack-name  myStack-${CIRCLE_WORKFLOW_ID:0:5} 
 jobs:
-  create_infrastructure:
-    docker:
-      - image: amazon/aws-cli
-    steps:
-      - checkout
-      - run:
-          name: Create CloudFormation Stack
-          command: |
-            aws cloudformation deploy \
-              --template-file template.yml \
-              --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
-              --region us-east-1
+  #create_infrastructure:
+    #docker:
+      #- image: amazon/aws-cli
+    #steps:
+      #- checkout
+      #- run:
+          #name: Create CloudFormation Stack
+          #command: |
+            #aws cloudformation deploy \
+              #--template-file template.yml \
+              #--stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
+              #--region us-east-1
 
-      - destroy_environment
+      #- destroy_environment
 
-  configure_infrastructure:
-    docker:
-      - image:  python:3.7-alpine3.11
-    steps:
-      - checkout
-      - add_ssh_keys:
-          fingerprints: ["bb:e3:e0:17:aa:7d:5e:fc:5d:f3:4b:a2:1b:7c:1b:d7"]
-      - run:
-          name: Install Ansible
-          command:  |
-            apk add --update ansible
-      - run:
-          name: Run Playbook and Configure Server
-          command:  |
-            ansible-playbook  -i  inventory.txt main-one.yml
+  #configure_infrastructure:
+    #docker:
+      #- image:  python:3.7-alpine3.11
+    #steps:
+      #- checkout
+      #- add_ssh_keys:
+          #fingerprints: ["bb:e3:e0:17:aa:7d:5e:fc:5d:f3:4b:a2:1b:7c:1b:d7"]
+      #- run:
+          #name: Install Ansible
+          #command:  |
+            #apk add --update ansible
+      #- run:
+          #name: Run Playbook and Configure Server
+          #command:  |
+            #ansible-playbook  -i  inventory.txt main-one.yml
 
   create_and_deploy_frontend:
     docker:
@@ -106,21 +106,21 @@ jobs:
             export SageIykeBucket=$(cat ~/textfile.txt)
             aws s3 rm "s3://${SageIykeBucket}"  --recursive
 
-  smoke_test:
-    docker:
-      - image:  alpine:latest
-    steps:
-      - run: apk add --update curl
-      - run:
-          name: smoke test
-          command:  |
-            URL="https://blog.udacity.com/"
-            if curl -s --head ${URL}
-            then
-              return 0
-            else
-              return 1
-            fi
+  #smoke_test:
+    #docker:
+      #- image:  alpine:latest
+    #steps:
+      #- run: apk add --update curl
+      #- run:
+          #name: smoke test
+          #command:  |
+            #URL="https://blog.udacity.com/"
+            #if curl -s --head ${URL}
+            #then
+              #return 0
+            #else
+              #return 1
+            #fi
       #- run:
           #name: Test job
           #Fail the job intentionally to simulate an error
@@ -132,13 +132,11 @@ jobs:
 workflows:
   build-workflow:
     jobs:
-      - create_infrastructure
-      - configure_infrastructure:
-          requires:
-            - create_infrastructure
-      - create_and_deploy_frontend:
-          requires:
-            - configure_infrastructure
+      #- create_infrastructure
+      #- configure_infrastructure:
+          #requires:
+            #- create_infrastructure
+      - create_and_deploy_frontend
       - promote_to_production:
           requires:
             - create_and_deploy_frontend
@@ -148,4 +146,4 @@ workflows:
             - get_last_deployment_id
             - romote_to_production
 
-      - smoke_test
+      #- smoke_test
