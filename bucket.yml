@@ -1,9 +1,8 @@
 Parameters:
   #New Bucket Name
   SageIykeBucket:
-    Description:
-      Description:  Existing Bucket Name
-      Type: String
+    Description:  Existing Bucket Name
+    Type: String
 
 Resources:
   WebsiteBucket:

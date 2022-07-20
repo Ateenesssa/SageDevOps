@@ -48,35 +48,35 @@ jobs:
               #return 1
             #fi
 
-  create_infrastructure:
-    docker:
-      - image:  amazon/aws-cli
-    steps:
-      - checkout
-      - run:
-          name: Create CloudFormation Stack
-          command:  |
-            aws cloudformation deploy \
-              --template-file template.yml  \
-              --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5}  \
-              --region us-east-1
-      - run:  return 1
-      - destroy_environment
-
-  #create_and_deploy_frontend:
+  #create_infrastructure:
     #docker:
       #- image:  amazon/aws-cli
     #steps:
       #- checkout
       #- run:
-          #name: Execute bucket.yml - Create CloudFormation Stack
+          #name: Create CloudFormation Stack
           #command:  |
             #aws cloudformation deploy \
-            #--template-file bucket.yml  \
-            #--stack-name stack-create-bucket-${CIRCLE_WORKFLOW_ID:0:5}  \
-            #--parameter-overrides MyBucketName="sage-lesson-4-1-bucket-${CIRCLE_WORKFLOW_ID:0:5}"
-      #- run:
-          #aws s3 sync . s3://mybucket-${CIRCLE_WORKFLOW_ID:0:5} --delete
+              #--template-file template.yml  \
+              #--stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5}  \
+              #--region us-east-1
+      #- run:  return 1
+      #- destroy_environment
+
+  create_and_deploy_frontend:
+    docker:
+      - image:  amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Execute bucket.yml - Create CloudFormation Stack
+          command:  |
+            aws cloudformation deploy \
+            --template-file bucket.yml  \
+            --stack-name stack-create-bucket-${CIRCLE_WORKFLOW_ID:0:5}  \
+            --parameter-overrides MyBucketName="iyke-lesson-4-bucket-${CIRCLE_WORKFLOW_ID:0:5}"
+      - run:
+          aws s3 sync . s3://iyke-lesson-4-bucket-${CIRCLE_WORKFLOW_ID:0:5} --delete
   
       #- run:
           #name: Test job
@@ -89,12 +89,12 @@ jobs:
 workflows:
   build-workflow:
     jobs:
-      - create_infrastructure
+      #- create_infrastructure
       #- configure_infrastructure
       #- smoke_test
           #requires:
             #- create_infrastructure
-      #- create_and_deploy_frontend
+      - create_and_deploy_frontend
       #- promote_to_production:
           #requires:
             #- create_and_deploy_frontend
