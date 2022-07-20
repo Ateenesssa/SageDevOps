@@ -6,35 +6,105 @@ Orbs:
   aws-cli:  circleci/aws-cli@2.0.3
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
-jobs:
-  #create_infrastructure:
-    #docker:
-      #- image: amazon/aws-cli
-    #steps:
-      #- checkout
-      #- run:
-          #name: Create CloudFormation Stack
-          #command: |
-            #aws cloudformation deploy \
-              #--template-file template.yml \
-              #--stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
-              #--region us-east-1
 
-  #configure_infrastructure:
-    #docker:
-      #- image:  python:3.7-alpine3.11
-    #steps:
-      #- checkout
-      #- add_ssh_keys:
-          #fingerprints: ["bb:e3:e0:17:aa:7d:5e:fc:5d:f3:4b:a2:1b:7c:1b:d7"]
+commands:
+  destroy_environment:
+    steps:
+      - run:
+          name: Destroy environment
+          when: on_fail
+          command:  |
+            aws cloudformation delete-stack --stack-name  myStack-${CIRCLE_WORKFLOW_ID:0:5} 
+jobs:
+  create_infrastructure:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Create CloudFormation Stack
+          command: |
+            aws cloudformation deploy \
+              --template-file template.yml \
+              --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
+              --region us-east-1
+
+      - destroy_environment
+
+  configure_infrastructure:
+    docker:
+      - image:  python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: ["bb:e3:e0:17:aa:7d:5e:fc:5d:f3:4b:a2:1b:7c:1b:d7"]
+      - run:
+          name: Install Ansible
+          command:  |
+            apk add --update ansible
+      - run:
+          name: Run Playbook and Configure Server
+          command:  |
+            ansible-playbook  -i  inventory.txt main-one.yml
+
+  create_and_deploy_frontend:
+    docker:
+      - image:  amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Execute bucket.yml - Create CloudFormation Stack
+          command:  |
+            aws cloudformation deoloy \
+            --template-file bucket,yml  \
+            --stack-name stack-create-bucket-${CIRCLE_WORKFLOW_ID:0:5}  \
+            --parameter-overrides MyBucketName="sage-lesson-4-1-bucket-${CIRCLE_WORKFLOW_ID:0:5}"
       #- run:
-          #name: Install Ansible
-          #command:  |
-            #apk add --update ansible
-      #- run:
-          #name: Run Playbook and Configure Server
-          #command:  |
-            #ansible-playbook  -i  inventory.txt main-one.yml
+          #aws s3 sync . s3://mybucket-${CIRCLE_WORKFLOW_ID:0:5} --delete
+
+  get_last_deployment_id:
+    docker:
+      - image:  amazon/aws-cli
+    steps:
+      - checkout
+      - run: yum install -y tar gzip
+      - run:
+          name: Fetch and save the old Pipeline ID (bucket name) responsible for the last release
+          command:  |
+            aws cloudformation  \
+            list-exports  --query "Exports[?Name==\`PipelineID\`].Value"  \
+            --no-paginate --output text > ~/textfile.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - textfile.txt
+
+  promote_to_production:
+    docker:
+      - image:  amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Execute cloudfront.yml
+          command:  |
+            aws cloudformation deploy \
+            --template-file cloudfront.yml  \
+            --stack-name  sage-distro \
+            --parameter-overrides PipelineID="sage-lesson-4-1-bucket-${CIRCLE_WORKFLOW_ID:0:5}"
+  
+  clean_up_old_front_end:
+    docker:
+      - image:  amazon/aws-cli
+    - steps:
+      - checkout
+      - run:  yum install -y tar gzip
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Destroy the previous s3 bucket and CoudFormation stack
+          command:  |
+            export SageIykeBucket=$(cat ~/textfile.txt)
+            aws s3 rm "s3://${SageIykeBucket}"  --recursive
 
   smoke_test:
     docker:
@@ -51,11 +121,31 @@ jobs:
             else
               return 1
             fi
+      #- run:
+          #name: Test job
+          #Fail the job intentionally to simulate an error
+          #command:  return 1
+      #- destroy_environment
+
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   build-workflow:
     jobs:
-      #- create_infrastructure
-      #- configure_infrastructure
+      - create_infrastructure
+      - configure_infrastructure:
+          requires:
+            - create_infrastructure
+      - create_and_deploy_frontend:
+          requires:
+            - configure_infrastructure
+      - promote_to_production:
+          requires:
+            - create_and_deploy_frontend
+      - get_last_deployment_id
+      - clean-up_old_frontend:
+          requires:
+            - get_last_deployment_id
+            - romote_to_production
+
       - smoke_test

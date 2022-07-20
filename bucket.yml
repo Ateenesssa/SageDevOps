@@ -1,0 +1,30 @@
+Parameters:
+#New Bucket Name
+
+SageIykeBucket:
+  Description:
+    Description:  Existing Bucket Name
+    Type: String
+
+Resources:
+  WebsiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${SageIykeBucket}"
+      AccessControl:  PublicRead
+      WebsiteConfiguration:
+        IndexDocument:  index.html
+        ErrorDocument:  error.html
+  
+  WebsiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref "WebsiteBucket"
+      PolicyDocument:
+        Statement:
+          - Sid:  PublicReadForBucketObjects
+            Effect: Allow
+            Principal:  '*'
+            Action: s3:GetObject
+            Resource: !Join ['', ['arn:aws:s3:::', !Ref 'WebsiteBucket', /*]]
+            
