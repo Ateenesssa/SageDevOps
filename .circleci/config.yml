@@ -63,6 +63,15 @@ jobs:
 
       - destroy_environment
 
+  smoke_test:
+    docker:
+      - image:  alpine:latest
+    steps:
+      - run:
+          name: smoke test
+          command:  return 1
+      - destroy_environment
+
   #create_and_deploy_frontend:
     #docker:
       #- image:  amazon/aws-cli
