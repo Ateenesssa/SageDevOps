@@ -1,10 +1,9 @@
 Parameters:
-#New Bucket Name
-
-SageIykeBucket:
-  Description:
-    Description:  Existing Bucket Name
-    Type: String
+  #New Bucket Name
+  SageIykeBucket:
+    Description:
+      Description:  Existing Bucket Name
+      Type: String
 
 Resources:
   WebsiteBucket:
@@ -27,4 +26,3 @@ Resources:
             Principal:  '*'
             Action: s3:GetObject
             Resource: !Join ['', ['arn:aws:s3:::', !Ref 'WebsiteBucket', /*]]
-            
