@@ -16,52 +16,52 @@ commands:
           command:  |
             aws cloudformation delete-stack --stack-name  myStack-${CIRCLE_WORKFLOW_ID:0:5} 
 jobs:
-  #create_infrastructure:
+  #configure_infrastructure:
     #docker:
-      #- image: amazon/aws-cli
+      #- image:  python:3.7-alpine3.11
     #steps:
       #- checkout
+      #- add_ssh_keys:
+          #fingerprints: ["a6:95:44:bd:93:ef:aa:68:d3:04:70:5b:c8:63:9e:53"]
       #- run:
-          #name: Create CloudFormation Stack
-          #command: |
-            #aws cloudformation deploy \
-              #--template-file template.yml \
-              #--stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
-              #--region us-east-1
+          #name: Install Ansible
+          #command:  |
+            #apk add --update ansible
+      #- run:
+          #name: Run Playbook and Configure Server
+          #command:  |
+            #ansible-playbook  -i  inventory.txt main-one.yml
 
-      #- destroy_environment
+  #smoke_test:
+    #docker:
+      #- image:  alpine:latest
+    #steps:
+      #- run: apk add --update curl
+      #- run:
+          #name: smoke test
+          #command:  |
+            #URL="https://blog.udacity.com/"
+            #if curl -s --head ${URL}
+            #then
+              #return 0
+            #else
+              #return 1
+            #fi
 
-  configure_infrastructure:
+  create_infrastructure:
     docker:
-      - image:  python:3.7-alpine3.11
+      - image: amazon/aws-cli
     steps:
       - checkout
-      - add_ssh_keys:
-          fingerprints: ["a6:95:44:bd:93:ef:aa:68:d3:04:70:5b:c8:63:9e:53"]
-      - run:
-          name: Install Ansible
-          command:  |
-            apk add --update ansible
-      - run:
-          name: Run Playbook and Configure Server
-          command:  |
-            ansible-playbook  -i  inventory.txt main-one.yml
+      -run:
+        name: Create CloudFormation Stack
+          command: |
+            aws cloudformation deploy \
+              --template-file template.yml \
+              --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
+              --region us-east-1
 
-  smoke_test:
-    docker:
-      - image:  alpine:latest
-    steps:
-      - run: apk add --update curl
-      - run:
-          name: smoke test
-          command:  |
-            URL="https://blog.udacitylove.com/"
-            if curl -s --head ${URL}
-            then
-              return 0
-            else
-              return 1
-            fi
+      - destroy_environment
 
   #create_and_deploy_frontend:
     #docker:
@@ -89,8 +89,9 @@ jobs:
 workflows:
   build-workflow:
     jobs:
-      #- create_infrastructure
-      - configure_infrastructure
+      - create_infrastructure
+      #- configure_infrastructure
+      #- smoke_test
           #requires:
             #- create_infrastructure
       #- create_and_deploy_frontend
@@ -102,4 +103,3 @@ workflows:
           #requires:
             #- get_last_deployment_id
             #- romote_to_production
-      - smoke_test
