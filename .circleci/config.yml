@@ -74,7 +74,7 @@ jobs:
             aws cloudformation deploy \
             --template-file bucket.yml  \
             --stack-name stack-create-bucket-${CIRCLE_WORKFLOW_ID:0:5}  \
-            --parameter-overrides MyBucketName="iyke-lesson-4-bucket-${CIRCLE_WORKFLOW_ID:0:5}"
+            --parameter-overrides SageIykeBucket="iyke-lesson-4-bucket-${CIRCLE_WORKFLOW_ID:0:5}"
       - run:
           aws s3 sync . s3://iyke-lesson-4-bucket-${CIRCLE_WORKFLOW_ID:0:5} --delete
   
