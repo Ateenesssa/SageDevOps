@@ -61,51 +61,6 @@ jobs:
             --parameter-overrides MyBucketName="sage-lesson-4-1-bucket-${CIRCLE_WORKFLOW_ID:0:5}"
       #- run:
           #aws s3 sync . s3://mybucket-${CIRCLE_WORKFLOW_ID:0:5} --delete
-
-  get_last_deployment_id:
-    docker:
-      - image:  amazon/aws-cli
-    steps:
-      - checkout
-      - run: yum install -y tar gzip
-      - run:
-          name: Fetch and save the old Pipeline ID (bucket name) responsible for the last release
-          command:  |
-            aws cloudformation  \
-            list-exports  --query "Exports[?Name==\`PipelineID\`].Value"  \
-            --no-paginate --output text > ~/textfile.txt
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - textfile.txt
-
-  promote_to_production:
-    docker:
-      - image:  amazon/aws-cli
-    steps:
-      - checkout
-      - run:
-          name: Execute cloudfront.yml
-          command:  |
-            aws cloudformation deploy \
-            --template-file cloudfront.yml  \
-            --stack-name  sage-distro \
-            --parameter-overrides PipelineID="sage-lesson-4-1-bucket-${CIRCLE_WORKFLOW_ID:0:5}"
-  
-  clean_up_old_front_end:
-    docker:
-      - image:  amazon/aws-cli
-    - steps:
-      - checkout
-      - run:  yum install -y tar gzip
-      - attach_workspace:
-          at: ~/
-      - run:
-          name: Destroy the previous s3 bucket and CoudFormation stack
-          command:  |
-            export SageIykeBucket=$(cat ~/textfile.txt)
-            aws s3 rm "s3://${SageIykeBucket}"  --recursive
-
   #smoke_test:
     #docker:
       #- image:  alpine:latest
@@ -137,13 +92,13 @@ workflows:
           #requires:
             #- create_infrastructure
       - create_and_deploy_frontend
-      - promote_to_production:
-          requires:
-            - create_and_deploy_frontend
-      - get_last_deployment_id
-      - clean-up_old_frontend:
-          requires:
-            - get_last_deployment_id
-            - romote_to_production
+      #- promote_to_production:
+          #requires:
+            #- create_and_deploy_frontend
+      #- get_last_deployment_id
+      #- clean-up_old_frontend:
+          #requires:
+            #- get_last_deployment_id
+            #- romote_to_production
 
       #- smoke_test
