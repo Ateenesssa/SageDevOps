@@ -31,34 +31,34 @@ jobs:
 
       #- destroy_environment
 
-  #configure_infrastructure:
-    #docker:
-      #- image:  python:3.7-alpine3.11
-    #steps:
-      #- checkout
-      #- add_ssh_keys:
-          #fingerprints: ["bb:e3:e0:17:aa:7d:5e:fc:5d:f3:4b:a2:1b:7c:1b:d7"]
-      #- run:
-          #name: Install Ansible
-          #command:  |
-            #apk add --update ansible
-      #- run:
-          #name: Run Playbook and Configure Server
-          #command:  |
-            #ansible-playbook  -i  inventory.txt main-one.yml
-
-  create_and_deploy_frontend:
+  configure_infrastructure:
     docker:
-      - image:  amazon/aws-cli
+      - image:  python:3.7-alpine3.11
     steps:
       - checkout
+      - add_ssh_keys:
+          fingerprints: ["a6:95:44:bd:93:ef:aa:68:d3:04:70:5b:c8:63:9e:53"]
       - run:
-          name: Execute bucket.yml - Create CloudFormation Stack
+          name: Install Ansible
           command:  |
-            aws cloudformation deploy \
-            --template-file bucket.yml  \
-            --stack-name stack-create-bucket-${CIRCLE_WORKFLOW_ID:0:5}  \
-            --parameter-overrides MyBucketName="sage-lesson-4-1-bucket-${CIRCLE_WORKFLOW_ID:0:5}"
+            apk add --update ansible
+      - run:
+          name: Run Playbook and Configure Server
+          command:  |
+            ansible-playbook  -i  inventory.txt main-one.yml
+
+  #create_and_deploy_frontend:
+    #docker:
+      #- image:  amazon/aws-cli
+    #steps:
+      #- checkout
+      #- run:
+          #name: Execute bucket.yml - Create CloudFormation Stack
+          #command:  |
+            #aws cloudformation deploy \
+            #--template-file bucket.yml  \
+            #--stack-name stack-create-bucket-${CIRCLE_WORKFLOW_ID:0:5}  \
+            #--parameter-overrides MyBucketName="sage-lesson-4-1-bucket-${CIRCLE_WORKFLOW_ID:0:5}"
       #- run:
           #aws s3 sync . s3://mybucket-${CIRCLE_WORKFLOW_ID:0:5} --delete
   #smoke_test:
@@ -88,10 +88,10 @@ workflows:
   build-workflow:
     jobs:
       #- create_infrastructure
-      #- configure_infrastructure:
+      - configure_infrastructure
           #requires:
             #- create_infrastructure
-      - create_and_deploy_frontend
+      #- create_and_deploy_frontend
       #- promote_to_production:
           #requires:
             #- create_and_deploy_frontend
