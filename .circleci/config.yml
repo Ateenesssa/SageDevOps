@@ -47,6 +47,22 @@ jobs:
           command:  |
             ansible-playbook  -i  inventory.txt main-one.yml
 
+  smoke_test:
+    docker:
+      - image:  alpine:latest
+    steps:
+      - run: apk add --update curl
+      - run:
+          name: smoke test
+          command:  |
+            URL="https://blog.udacity.com/"
+            if curl -s --head ${URL}
+            then
+              return 0
+            else
+              return 1
+            fi
+
   #create_and_deploy_frontend:
     #docker:
       #- image:  amazon/aws-cli
@@ -61,21 +77,7 @@ jobs:
             #--parameter-overrides MyBucketName="sage-lesson-4-1-bucket-${CIRCLE_WORKFLOW_ID:0:5}"
       #- run:
           #aws s3 sync . s3://mybucket-${CIRCLE_WORKFLOW_ID:0:5} --delete
-  #smoke_test:
-    #docker:
-      #- image:  alpine:latest
-    #steps:
-      #- run: apk add --update curl
-      #- run:
-          #name: smoke test
-          #command:  |
-            #URL="https://blog.udacity.com/"
-            #if curl -s --head ${URL}
-            #then
-              #return 0
-            #else
-              #return 1
-            #fi
+  
       #- run:
           #name: Test job
           #Fail the job intentionally to simulate an error
@@ -100,5 +102,4 @@ workflows:
           #requires:
             #- get_last_deployment_id
             #- romote_to_production
-
-      #- smoke_test
+      - smoke_test
