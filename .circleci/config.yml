@@ -125,8 +125,8 @@ jobs:
       - run:
           name: Destroy the previous S3 bucket and CloudFormation stack
           command:  |
-            export OldBucketID=$(cat ~/textfile.txt)
-            aws s3 rm "s3://${OldBucketID}" --recursive
+            export iyke-lesson-4-bucket=$(cat ~/textfile.txt)
+            aws s3 rm "s3://${iyke-lesson-4-bucket}" --recursive
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
